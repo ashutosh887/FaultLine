@@ -1,37 +1,42 @@
 # FaultLine
 
-**“Root-cause analysis for AI decisions.”**
+**Root-cause analysis for AI decisions.**
+
+Flight recorder + forensics engine for agentic / AI-driven systems. Capture every step, then produce an evidence-backed incident report: timeline → root cause → contributing factors → fixes.
 
 ---
 
-Monorepo for FaultLine: flight-recorder + causal reconstruction for AI systems.
+## Monorepo
 
-- **apps/web** — Next.js app (ingest API + forensic report UI)
-- **apps/worker** — BullMQ worker (forensics pipeline, Gemini analysis)
-- **packages/sdk** — Instrumentation SDK to emit trace events from your app/agent
-- **packages/shared** — Shared types, event schemas, constants
+- **apps/web** — Next.js (Ingest API + Report UI)
+- **apps/worker** — BullMQ worker (forensics pipeline)
+- **packages/sdk** — instrumentation SDK
+- **packages/shared** — event schemas + shared types
+
+---
 
 ## Quick start
 
 ```bash
-# Install (use npm or pnpm)
 npm install
-# or: pnpm install
-
 cp .env.example .env
-# Edit .env (Redis, Postgres, R2/S3, Gemini API key)
-
-# Optional: start Redis + Postgres + MinIO for local dev
-docker compose up -d
-
-# Build and run
-npm run build
-npm run dev:web          # Next.js on http://localhost:3000
-# In another terminal:
-npm run dev:worker       # BullMQ forensics worker (needs Redis)
 ```
 
-- **Ingest API:** `POST http://localhost:3000/api/ingest` (body: `{ "events": [...] }`, optional `trace_id`).
-- **Report UI:** http://localhost:3000 (home), http://localhost:3000/runs (run list).
+Edit `.env`. Then:
 
-Each app has its own `.env.example`; copy to `.env` and fill in values.
+```bash
+docker compose up -d
+npm run build
+npm run dev:web
+```
+
+In another terminal:
+
+```bash
+npm run dev:worker
+```
+
+- **UI:** http://localhost:3000
+- **Runs:** http://localhost:3000/runs
+
+Each app has its own `.env.example`; copy to `.env` where needed.
