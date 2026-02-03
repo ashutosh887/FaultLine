@@ -13,7 +13,6 @@ export async function POST(
   }
 
   const status = (body as { status?: string }).status;
-  const failure_anchor = (body as { failure_anchor?: { event_id: string; reason: string } }).failure_anchor;
 
   if (!status || !["failed", "completed"].includes(status)) {
     return NextResponse.json(
@@ -22,5 +21,5 @@ export async function POST(
     );
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, trace_id });
 }
