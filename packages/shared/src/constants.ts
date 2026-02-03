@@ -1,3 +1,5 @@
+export const INGEST_MAX_BODY_BYTES = 1 * 1024 * 1024;
+
 export const EVENT_TYPES = [
   "user_input",
   "tool_call",
