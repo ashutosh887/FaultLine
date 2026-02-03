@@ -1,0 +1,28 @@
+{
+  "name": "@faultline/worker",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "private": "true",
+  "dependencies": {
+    "@faultline/shared": "^0.0.1",
+    "bullmq": "^5.67.2",
+    "ioredis": "^5.9.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.31",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

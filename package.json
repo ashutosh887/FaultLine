@@ -1,0 +1,25 @@
+{
+  "name": "faultline",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Root-cause analysis for AI decisions.",
+  "scripts": {
+    "build": "npm run build --workspace=@faultline/shared && npm run build --workspace=@faultline/sdk && npm run build --workspace=@faultline/worker && npm run build --workspace=@faultline/web",
+    "build:shared": "npm run build --workspace=@faultline/shared",
+    "dev": "npm run dev:web & npm run dev:worker",
+    "dev:web": "npm run build:shared && npm run dev --workspace=@faultline/web",
+    "dev:worker": "npm run dev --workspace=@faultline/worker",
+    "lint": "npm run lint --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present; rm -rf node_modules"
+  },
+  "keywords": ["faultline", "ai", "root-cause", "forensics"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
