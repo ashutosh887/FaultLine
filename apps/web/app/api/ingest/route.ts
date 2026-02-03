@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ingestBodySchema } from "@faultline/shared";
+import { ingestBodySchema, INGEST_MAX_BODY_BYTES } from "@faultline/shared";
 import { randomBytes } from "crypto";
 
 export async function POST(request: NextRequest) {
+  const contentLength = request.headers.get("content-length");
+  if (contentLength && parseInt(contentLength, 10) > INGEST_MAX_BODY_BYTES) {
+    return NextResponse.json(
+      { error: "Payload too large" },
+      { status: 413 }
+    );
+  }
   let body: unknown;
   try {
     body = await request.json();
