@@ -17,6 +17,7 @@
   "private": "true",
   "dependencies": {
     "@faultline/shared": "^0.0.1",
+    "@google/generative-ai": "^0.21.0",
     "bullmq": "^5.67.2",
     "ioredis": "^5.9.2"
   },
