@@ -17,7 +17,7 @@ export function createTraceContext(parent?: TraceContext): TraceContext {
 
 function wrapEvent<T extends { type: string; payload: object }>(
   event: T & { timestamp?: string | number },
-  context: TraceContext
+  context: TraceContext,
 ): T & { trace_context: TraceContext; timestamp: string } {
   const raw = event.timestamp;
   const ts =
@@ -71,7 +71,11 @@ export class Tracer {
     return this.context;
   }
 
-  emit(event: Omit<TraceEvent, "trace_context" | "timestamp"> & { timestamp?: string | number }): void {
+  emit(
+    event: Omit<TraceEvent, "trace_context" | "timestamp"> & {
+      timestamp?: string | number;
+    },
+  ): void {
     const full = wrapEvent(event as TraceEvent, this.context) as TraceEvent;
     if (this.config.batch) {
       this.buffer.push(full);
@@ -92,7 +96,8 @@ export class Tracer {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    if (this.config.apiKey) headers["Authorization"] = `Bearer ${this.config.apiKey}`;
+    if (this.config.apiKey)
+      headers["Authorization"] = `Bearer ${this.config.apiKey}`;
     try {
       const res = await fetch(url, {
         method: "POST",
@@ -100,7 +105,11 @@ export class Tracer {
         body: JSON.stringify({ trace_id: this.context.trace_id, events }),
       });
       if (!res.ok) {
-        console.warn("[FaultLine SDK] Ingest failed:", res.status, await res.text());
+        console.warn(
+          "[FaultLine SDK] Ingest failed:",
+          res.status,
+          await res.text(),
+        );
       }
     } catch (err) {
       console.warn("[FaultLine SDK] Ingest error:", err);
