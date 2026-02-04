@@ -1,9 +1,12 @@
 import Link from "next/link";
 
 async function getRuns() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_INGEST_URL || "http://localhost:3000"}/api/runs`, {
-    cache: "no-store",
-  });
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_INGEST_URL || "http://localhost:3000"}/api/runs`,
+    {
+      cache: "no-store",
+    },
+  );
   const data = await res.json();
   return data.runs as Array<{
     id: string;

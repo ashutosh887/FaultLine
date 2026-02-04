@@ -15,6 +15,5 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     artifact_id: `art_${Date.now()}`,
     url: `s3://faultline-artifacts/${trace_id ?? "unknown"}/${(file as File).name}`,
-    sha256: undefined,
   });
 }
