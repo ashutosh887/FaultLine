@@ -1,8 +1,12 @@
 import Link from "next/link";
-import { getRuns } from "@/app/lib/runs";
 
-export default async function RunsPage() {
-  const runs = await getRuns();
+export default function RunsPage() {
+  const runs: Array<{
+    id: string;
+    status: string;
+    duration_ms?: number;
+    failure_reason?: string;
+  }> = [];
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
