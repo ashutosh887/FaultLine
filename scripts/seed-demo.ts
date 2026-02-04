@@ -10,7 +10,10 @@ const redis = new Redis({
 const EVENTS_KEY = (trace_id: string) => `faultline:events:${trace_id}`;
 const TRACES_KEY = "faultline:traces";
 
-async function storeEvents(trace_id: string, events: TraceEvent[]): Promise<void> {
+async function storeEvents(
+  trace_id: string,
+  events: TraceEvent[],
+): Promise<void> {
   await redis.connect();
   await redis.set(EVENTS_KEY(trace_id), JSON.stringify(events));
   await redis.sadd(TRACES_KEY, trace_id);

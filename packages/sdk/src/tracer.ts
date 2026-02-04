@@ -105,15 +105,9 @@ export class Tracer {
         body: JSON.stringify({ trace_id: this.context.trace_id, events }),
       });
       if (!res.ok) {
-        console.warn(
-          "[FaultLine SDK] Ingest failed:",
-          res.status,
-          await res.text(),
-        );
+        await res.text();
       }
-    } catch (err) {
-      console.warn("[FaultLine SDK] Ingest error:", err);
-    }
+    } catch {}
   }
 
   destroy(): void {
