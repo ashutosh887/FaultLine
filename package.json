@@ -10,9 +10,19 @@
     "dev:web": "npm run build:shared && npm run dev --workspace=@faultline/web",
     "dev:worker": "npm run dev --workspace=@faultline/worker",
     "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
     "clean": "npm run clean --workspaces --if-present; rm -rf node_modules"
   },
-  "keywords": ["faultline", "ai", "root-cause", "forensics"],
+  "devDependencies": {
+    "prettier": "^3.4.2"
+  },
+  "keywords": [
+    "faultline",
+    "ai",
+    "root-cause",
+    "forensics"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=18"
