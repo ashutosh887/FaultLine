@@ -1,6 +1,8 @@
 import { Worker, Queue } from "bullmq";
 import { FORENSICS_QUEUE_NAME, FORENSICS_DLQ_NAME } from "@faultline/shared";
 import { logWithTrace } from "@faultline/shared";
+import { getEvents, storeReport } from "./redis-store.js";
+import { analyzeTrace } from "./gemini.js";
 
 const REDIS_HOST = process.env.REDIS_HOST ?? "localhost";
 const REDIS_PORT = parseInt(process.env.REDIS_PORT ?? "6379", 10);
@@ -19,7 +21,34 @@ async function processForensicsJob(job: {
   const { trace_id } = job.data;
   const jobId = job.id ?? "unknown";
   logWithTrace(trace_id, "forensics_job_started", { jobId });
-  logWithTrace(trace_id, "forensics_job_finished_stub", { jobId });
+
+  try {
+    const events = await getEvents(trace_id);
+    if (events.length === 0) {
+      logWithTrace(trace_id, "forensics_no_events", { jobId });
+      return;
+    }
+
+    logWithTrace(trace_id, "forensics_calling_gemini", {
+      jobId,
+      event_count: events.length,
+    });
+
+    const { verdict, causal_graph } = await analyzeTrace(trace_id, events);
+
+    await storeReport(trace_id, verdict, causal_graph);
+
+    logWithTrace(trace_id, "forensics_completed", {
+      jobId,
+      root_cause: verdict.root_cause.substring(0, 50),
+    });
+  } catch (error) {
+    logWithTrace(trace_id, "forensics_error", {
+      jobId,
+      error: String(error),
+    });
+    throw error;
+  }
 }
 
 const worker = new Worker(

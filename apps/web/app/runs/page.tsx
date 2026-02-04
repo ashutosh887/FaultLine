@@ -1,12 +1,20 @@
 import Link from "next/link";
 
-export default function RunsPage() {
-  const runs: Array<{
+async function getRuns() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_INGEST_URL || "http://localhost:3000"}/api/runs`, {
+    cache: "no-store",
+  });
+  const data = await res.json();
+  return data.runs as Array<{
     id: string;
     status: string;
     duration_ms?: number;
     failure_reason?: string;
-  }> = [];
+  }>;
+}
+
+export default async function RunsPage() {
+  const runs = await getRuns();
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
