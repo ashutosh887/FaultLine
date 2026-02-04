@@ -9,6 +9,7 @@ import type { IngestBody } from "@faultline/shared";
 import { randomBytes } from "crypto";
 import { enqueueForensicsJob } from "@/app/lib/queue";
 import { checkRateLimit, getRateLimitKey } from "@/app/lib/rate-limit";
+import { storeEvents } from "@/app/lib/redis-store";
 
 export const maxDuration = 30;
 
@@ -42,6 +43,7 @@ export async function POST(request: NextRequest) {
   const trace_id = parsed.data.trace_id ?? randomBytes(16).toString("hex");
   const session_id = parsed.data.session_id;
 
+  await storeEvents(trace_id, parsed.data.events);
   const jobId = await enqueueForensicsJob(trace_id, session_id);
   logWithTrace(trace_id, "ingest_accepted", {
     events_received: parsed.data.events.length,
