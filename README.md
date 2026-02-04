@@ -6,6 +6,33 @@ Flight recorder + forensics engine for agentic / AI-driven systems. Capture ever
 
 ---
 
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph SDK
+    A[Agent / App]
+  end
+  subgraph Web
+    B[POST /api/ingest]
+    C[GET /api/runs]
+    D[GET /api/runs/:id/report]
+  end
+  subgraph Redis
+    Q[BullMQ Queue]
+  end
+  subgraph Worker
+    W[Forensics Worker]
+  end
+  A -->|events| B
+  B -->|enqueue| Q
+  Q --> W
+  W -->|verdict + graph| D
+  C --> D
+```
+
+---
+
 ## Monorepo
 
 - **apps/web** — Next.js (Ingest API + Report UI)
