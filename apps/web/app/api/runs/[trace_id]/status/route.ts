@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ trace_id: string }> }
+  { params }: { params: Promise<{ trace_id: string }> },
 ) {
   const { trace_id } = await params;
   let body: unknown;
@@ -17,7 +17,7 @@ export async function POST(
   if (!status || !["failed", "completed"].includes(status)) {
     return NextResponse.json(
       { error: "status must be 'failed' or 'completed'" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
