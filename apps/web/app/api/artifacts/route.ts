@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   if (!file || typeof file === "string") {
     return NextResponse.json(
       { error: "Missing or invalid file" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 

@@ -15,16 +15,26 @@ export function getForensicsQueue(): Queue {
   if (!forensicsQueue) {
     forensicsQueue = new Queue(FORENSICS_QUEUE_NAME, {
       connection,
-      defaultJobOptions: { removeOnComplete: 100 },
+      defaultJobOptions: {
+        removeOnComplete: 100,
+        attempts: 3,
+        backoff: { type: "exponential", delay: 1000 },
+      },
     });
   }
   return forensicsQueue;
 }
 
-export async function enqueueForensicsJob(trace_id: string, session_id?: string | null): Promise<string | null> {
+export async function enqueueForensicsJob(
+  trace_id: string,
+  session_id?: string | null,
+): Promise<string | null> {
   try {
     const queue = getForensicsQueue();
-    const job = await queue.add("analyze", { trace_id, session_id: session_id ?? undefined });
+    const job = await queue.add("analyze", {
+      trace_id,
+      session_id: session_id ?? undefined,
+    });
     return job.id ?? null;
   } catch {
     return null;
