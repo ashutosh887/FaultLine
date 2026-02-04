@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getReport } from "@/app/lib/report";
 import { ReportDownloadButton } from "./ReportDownloadButton";
+import { TimelineView } from "./TimelineView";
+import { CausalGraphView } from "./CausalGraphView";
 
 export default async function RunDetailPage({
   params,
@@ -25,53 +27,64 @@ export default async function RunDetailPage({
       <div className="mt-8 grid gap-6 md:grid-cols-2">
         <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
           <h2 className="text-sm font-medium text-zinc-400">Timeline</h2>
-          {report.timeline.length === 0 ? (
-            <p className="mt-2 text-sm text-zinc-500">
-              No events yet. Analysis may still be running.
-            </p>
-          ) : (
-            <ul className="mt-2 space-y-2">
-              {report.timeline.map((event, i) => (
-                <li
-                  key={i}
-                  className="rounded border border-zinc-700 bg-zinc-800/50 p-2 text-sm text-zinc-300"
-                >
-                  <span className="font-medium">{event.type}</span>
-                  {typeof event.timestamp === "number"
-                    ? ` — ${new Date(event.timestamp).toISOString()}`
-                    : ""}
-                </li>
-              ))}
-            </ul>
-          )}
+          <TimelineView events={report.timeline} />
         </section>
         <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
           <h2 className="text-sm font-medium text-zinc-400">Causal graph</h2>
-          {report.causal_graph.nodes.length === 0 ? (
-            <p className="mt-2 text-sm text-zinc-500">No graph data yet.</p>
-          ) : (
-            <ul className="mt-2 space-y-1 text-sm text-zinc-300">
-              {report.causal_graph.nodes.map((n) => (
-                <li key={n.id}>{n.label}</li>
-              ))}
-            </ul>
-          )}
+          <div className="mt-2">
+            <CausalGraphView graph={report.causal_graph} />
+          </div>
         </section>
       </div>
       <section className="mt-6 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
         <h2 className="text-sm font-medium text-zinc-400">Verdict</h2>
         {report.verdict ? (
-          <div className="mt-2 space-y-2 text-sm text-zinc-300">
+          <div className="mt-2 space-y-4 text-sm text-zinc-300">
             <p>
               <span className="text-zinc-500">Root cause:</span>{" "}
               {report.verdict.root_cause}
             </p>
-            {report.verdict.counterfactual ? (
+            {report.verdict.evidence_links.length > 0 && (
+              <div>
+                <span className="text-zinc-500">Evidence:</span>
+                <ul className="mt-1 list-inside list-disc space-y-0.5 text-zinc-400">
+                  {report.verdict.evidence_links.map((e, i) => (
+                    <li key={i}>
+                      {e.step_id}
+                      {e.snippet ? ` — ${e.snippet}` : ""}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {report.verdict.contributing_factors.length > 0 && (
+              <div>
+                <span className="text-zinc-500">Contributing factors:</span>
+                <ol className="mt-1 list-inside list-decimal space-y-1 text-zinc-400">
+                  {report.verdict.contributing_factors.map((f, i) => (
+                    <li key={i}>{f.description}</li>
+                  ))}
+                </ol>
+              </div>
+            )}
+            {report.verdict.counterfactual && (
               <p>
                 <span className="text-zinc-500">Counterfactual:</span>{" "}
                 {report.verdict.counterfactual}
               </p>
-            ) : null}
+            )}
+            {report.verdict.fix_suggestions.length > 0 && (
+              <div>
+                <span className="text-zinc-500">Fix suggestions:</span>
+                <ul className="mt-1 list-inside list-disc space-y-0.5 text-zinc-400">
+                  {report.verdict.fix_suggestions.map((f, i) => (
+                    <li key={i}>
+                      [{f.category}] {f.description}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         ) : (
           <p className="mt-2 text-sm text-zinc-500">
