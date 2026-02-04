@@ -7,9 +7,7 @@ export default function Home() {
       <h1 className="text-3xl font-semibold tracking-tight text-zinc-100">
         {SITE_NAME}
       </h1>
-      <p className="mt-2 text-zinc-400">
-        {TAGLINE}
-      </p>
+      <p className="mt-2 text-zinc-400">{TAGLINE}</p>
       <nav className="mt-10 flex gap-4">
         <Link
           href="/runs"
