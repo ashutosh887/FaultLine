@@ -12,10 +12,12 @@
     "lint": "npm run lint --workspaces --if-present",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
+    "seed": "tsx scripts/seed-demo.ts",
     "clean": "npm run clean --workspaces --if-present; rm -rf node_modules"
   },
   "devDependencies": {
-    "prettier": "^3.4.2"
+    "prettier": "^3.4.2",
+    "tsx": "^4.21.0"
   },
   "keywords": [
     "faultline",
