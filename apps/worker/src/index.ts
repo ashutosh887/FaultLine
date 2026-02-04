@@ -1,5 +1,5 @@
-import { Worker } from "bullmq";
-import { FORENSICS_QUEUE_NAME } from "@faultline/shared";
+import { Worker, Queue } from "bullmq";
+import { FORENSICS_QUEUE_NAME, FORENSICS_DLQ_NAME } from "@faultline/shared";
 import { logWithTrace } from "@faultline/shared";
 
 const REDIS_HOST = process.env.REDIS_HOST ?? "localhost";
@@ -9,6 +9,8 @@ const connection = {
   host: REDIS_HOST,
   port: REDIS_PORT,
 };
+
+const dlq = new Queue(FORENSICS_DLQ_NAME, { connection });
 
 async function processForensicsJob(job: {
   id?: string;
@@ -35,13 +37,25 @@ worker.on("completed", (job) =>
     { jobId: job?.id },
   ),
 );
-worker.on("failed", (job, err) =>
-  logWithTrace(
-    (job?.data as { trace_id?: string })?.trace_id ?? "",
-    "job_failed",
-    { jobId: job?.id, error: String(err) },
-  ),
-);
+worker.on("failed", async (job, err) => {
+  const trace_id = (job?.data as { trace_id?: string })?.trace_id ?? "";
+  logWithTrace(trace_id, "job_failed", {
+    jobId: job?.id,
+    error: String(err),
+  });
+  if (job) {
+    await dlq.add(
+      "failed",
+      {
+        trace_id,
+        job_id: job.id,
+        error: String(err),
+        failed_at: new Date().toISOString(),
+      },
+      { removeOnComplete: 1000 },
+    );
+  }
+});
 
 console.log("[worker] FaultLine forensics worker started");
 process.on("SIGTERM", () => worker.close().then(() => process.exit(0)));

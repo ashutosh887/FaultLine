@@ -1,6 +1,7 @@
 export const INGEST_MAX_BODY_BYTES = 1 * 1024 * 1024;
 
 export const FORENSICS_QUEUE_NAME = "faultline:forensics";
+export const FORENSICS_DLQ_NAME = "faultline:forensics:failed";
 
 export const INGEST_RATE_LIMIT_WINDOW_MS = 60_000;
 export const INGEST_RATE_LIMIT_MAX_REQUESTS = 100;

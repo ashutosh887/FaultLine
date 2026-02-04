@@ -17,10 +17,14 @@ function isSecretKey(key: string): boolean {
 
 const BEARER_REGEX = /bearer\s+[a-zA-Z0-9_\-\.]+/gi;
 const SK_KEY_REGEX = /sk-[a-zA-Z0-9]{20,}/g;
+const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+const PHONE_REGEX = /\+?[\d\s\-()]{10,}/g;
 
 function redactString(value: string): string {
   let out = value.replace(BEARER_REGEX, "Bearer [REDACTED]");
   out = out.replace(SK_KEY_REGEX, "sk-[REDACTED]");
+  out = out.replace(EMAIL_REGEX, "[PII_REDACTED]");
+  out = out.replace(PHONE_REGEX, "[PII_REDACTED]");
   return out;
 }
 
