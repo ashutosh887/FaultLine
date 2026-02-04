@@ -16,15 +16,21 @@ export const verdictPackSchema = z.object({
       rank: z.number(),
       description: z.string(),
       evidence_links: z.array(evidenceLinkSchema),
-    })
+    }),
   ),
   counterfactual: z.string().optional(),
   fix_suggestions: z.array(
     z.object({
-      category: z.enum(["prompt", "tooling", "memory", "orchestration", "safety"]),
+      category: z.enum([
+        "prompt",
+        "tooling",
+        "memory",
+        "orchestration",
+        "safety",
+      ]),
       description: z.string(),
       evidence_links: z.array(evidenceLinkSchema).optional(),
-    })
+    }),
   ),
 });
 
