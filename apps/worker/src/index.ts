@@ -1,4 +1,6 @@
 import { Worker, Queue } from "bullmq";
+import { FORENSICS_QUEUE_NAME } from "@faultline/shared";
+import { logWithTrace } from "@faultline/shared";
 
 const REDIS_HOST = process.env.REDIS_HOST ?? "localhost";
 const REDIS_PORT = parseInt(process.env.REDIS_PORT ?? "6379", 10);
@@ -8,7 +10,7 @@ const connection = {
   port: REDIS_PORT,
 };
 
-export const FORENSICS_QUEUE_NAME = "faultline:forensics";
+export { FORENSICS_QUEUE_NAME };
 
 export const forensicsQueue = new Queue(FORENSICS_QUEUE_NAME, {
   connection,
@@ -18,8 +20,8 @@ export const forensicsQueue = new Queue(FORENSICS_QUEUE_NAME, {
 async function processForensicsJob(job: { id?: string; data: { trace_id: string } }) {
   const { trace_id } = job.data;
   const jobId = job.id ?? "unknown";
-  console.log("[worker] Forensics job started", { jobId, trace_id });
-  console.log("[worker] Forensics job finished (stub)", { jobId });
+  logWithTrace(trace_id, "forensics_job_started", { jobId });
+  logWithTrace(trace_id, "forensics_job_finished_stub", { jobId });
 }
 
 const worker = new Worker(
@@ -30,8 +32,12 @@ const worker = new Worker(
   { connection, concurrency: 2 }
 );
 
-worker.on("completed", (job) => console.log("[worker] Job completed", job.id));
-worker.on("failed", (job, err) => console.error("[worker] Job failed", job?.id, err));
+worker.on("completed", (job) =>
+  logWithTrace((job?.data as { trace_id?: string })?.trace_id ?? "", "job_completed", { jobId: job?.id })
+);
+worker.on("failed", (job, err) =>
+  logWithTrace((job?.data as { trace_id?: string })?.trace_id ?? "", "job_failed", { jobId: job?.id, error: String(err) })
+);
 
 console.log("[worker] FaultLine forensics worker started");
 process.on("SIGTERM", () => worker.close().then(() => process.exit(0)));
