@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { setRunStatus } from "@/app/lib/redis-store";
 
 export async function POST(
   request: NextRequest,
@@ -12,7 +13,11 @@ export async function POST(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const status = (body as { status?: string }).status;
+  const { status, failure_reason, failure_event_id } = body as {
+    status?: string;
+    failure_reason?: string;
+    failure_event_id?: string;
+  };
 
   if (!status || !["failed", "completed"].includes(status)) {
     return NextResponse.json(
@@ -20,6 +25,14 @@ export async function POST(
       { status: 400 },
     );
   }
+
+  await setRunStatus(trace_id, {
+    status: status as "failed" | "completed",
+    failure_reason:
+      typeof failure_reason === "string" ? failure_reason : undefined,
+    failure_event_id:
+      typeof failure_event_id === "string" ? failure_event_id : undefined,
+  });
 
   return NextResponse.json({ ok: true, trace_id });
 }

@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { getAllTraceIds, getEvents, getReport } from "@/app/lib/redis-store";
+import {
+  getAllTraceIds,
+  getEvents,
+  getReport,
+  getRunStatus,
+} from "@/app/lib/redis-store";
 
 export async function GET() {
   const traceIds = await getAllTraceIds();
@@ -7,6 +12,7 @@ export async function GET() {
     traceIds.map(async (id) => {
       const events = await getEvents(id);
       const { verdict } = await getReport(id);
+      const runStatus = await getRunStatus(id);
       const lastEvent = events[events.length - 1];
       const firstEvent = events[0];
       const duration_ms =
@@ -19,11 +25,26 @@ export async function GET() {
               : new Date(firstEvent.timestamp).getTime())
           : undefined;
 
+      const status = runStatus
+        ? runStatus.status === "failed" || runStatus.status === "completed"
+          ? runStatus.status
+          : verdict
+            ? "analyzed"
+            : "running"
+        : verdict
+          ? "analyzed"
+          : "running";
+      const failure_reason =
+        runStatus?.status === "failed" && runStatus.failure_reason
+          ? runStatus.failure_reason
+          : verdict?.root_cause ?? undefined;
+
       return {
         id,
-        status: verdict ? "analyzed" : "running",
+        status,
         duration_ms,
-        failure_reason: verdict?.root_cause ?? undefined,
+        failure_reason,
+        failure_event_id: runStatus?.failure_event_id,
       };
     }),
   );
