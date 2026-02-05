@@ -1,8 +1,10 @@
 import Link from "next/link";
+import type { EvidenceLink } from "@faultline/shared";
 import { getReport } from "@/app/lib/report";
 import { ReportDownloadButton } from "./ReportDownloadButton";
 import { TimelineView } from "./TimelineView";
 import { CausalGraphView } from "./CausalGraphView";
+import { EvidencePanel } from "./EvidencePanel";
 
 export default async function RunDetailPage({
   params,
@@ -24,6 +26,27 @@ export default async function RunDetailPage({
       >
         ← Runs
       </Link>
+      {report.failure_anchor &&
+        (report.failure_anchor.failure_reason ||
+          report.failure_anchor.failure_event_id) && (
+          <section className="mt-4 rounded-lg border border-amber-900/50 bg-amber-950/30 p-4">
+            <h2 className="text-sm font-medium text-amber-400">
+              Failure anchor
+            </h2>
+            <p className="mt-1 text-sm text-zinc-300">
+              {report.failure_anchor.failure_event_id && (
+                <span className="text-zinc-500">Step: </span>
+              )}
+              {report.failure_anchor.failure_event_id}
+              {report.failure_anchor.failure_reason && (
+                <>
+                  {report.failure_anchor.failure_event_id && " — "}
+                  {report.failure_anchor.failure_reason}
+                </>
+              )}
+            </p>
+          </section>
+        )}
       <div className="mt-8 grid gap-6 md:grid-cols-2">
         <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
           <h2 className="text-sm font-medium text-zinc-400">Timeline</h2>
@@ -40,6 +63,18 @@ export default async function RunDetailPage({
         <h2 className="text-sm font-medium text-zinc-400">Verdict</h2>
         {report.verdict ? (
           <div className="mt-2 space-y-4 text-sm text-zinc-300">
+            {report.verdict.confidence_root_cause != null && (
+              <p>
+                <span className="text-zinc-500">Confidence (root cause):</span>{" "}
+                {Math.round(report.verdict.confidence_root_cause * 100)}%
+              </p>
+            )}
+            {report.verdict.confidence_factors != null && (
+              <p>
+                <span className="text-zinc-500">Confidence (factors):</span>{" "}
+                {Math.round(report.verdict.confidence_factors * 100)}%
+              </p>
+            )}
             <p>
               <span className="text-zinc-500">Root cause:</span>{" "}
               {report.verdict.root_cause}
@@ -92,6 +127,16 @@ export default async function RunDetailPage({
           </p>
         )}
       </section>
+      {report.verdict && (() => {
+        const links: EvidenceLink[] = [
+          ...report.verdict.evidence_links,
+          ...report.verdict.contributing_factors.flatMap((f) => f.evidence_links),
+          ...report.verdict.fix_suggestions.flatMap(
+            (f) => f.evidence_links ?? [],
+          ),
+        ];
+        return <EvidencePanel evidenceLinks={links} />;
+      })()}
     </main>
   );
 }
