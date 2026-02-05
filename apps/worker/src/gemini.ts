@@ -20,6 +20,14 @@ function getResponseSchema() {
             type: "string",
             description: "Primary reason for failure",
           },
+          confidence_root_cause: {
+            type: "number",
+            description: "Confidence in root cause 0-1",
+          },
+          confidence_factors: {
+            type: "number",
+            description: "Confidence in contributing factors 0-1",
+          },
           evidence_links: {
             type: "array",
             items: {
@@ -192,6 +200,8 @@ Build a causal graph showing:
 - Nodes: Each significant step, assumption, tool output, or decision point
 - Edges: Show dependencies (depends_on), contradictions (contradicts), or causal chains (leads_to)
 - First divergence: Identify the node ID where failure first became inevitable
+
+Provide confidence_root_cause and confidence_factors as numbers between 0 and 1 (how confident you are in the root cause and in the contributing factors).
 
 Return structured JSON with "verdict" and "causal_graph" keys matching the provided schema.`;
 }
