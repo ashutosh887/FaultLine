@@ -11,6 +11,8 @@ export type EvidenceLink = z.infer<typeof evidenceLinkSchema>;
 export const verdictPackSchema = z.object({
   root_cause: z.string(),
   evidence_links: z.array(evidenceLinkSchema).min(1),
+  confidence_root_cause: z.number().min(0).max(1).optional(),
+  confidence_factors: z.number().min(0).max(1).optional(),
   contributing_factors: z.array(
     z.object({
       rank: z.number(),
