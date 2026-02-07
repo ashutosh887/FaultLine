@@ -15,13 +15,19 @@ export function TimelineView({ events }: { events: TraceEvent[] }) {
   return (
     <ul className="mt-2 space-y-2">
       {events.map((event, i) => (
-        <TimelineEventRow key={i} event={event} />
+        <TimelineEventRow key={i} event={event} stepId={`Step ${i + 1}`} />
       ))}
     </ul>
   );
 }
 
-function TimelineEventRow({ event }: { event: TraceEvent }) {
+function TimelineEventRow({
+  event,
+  stepId,
+}: {
+  event: TraceEvent;
+  stepId: string;
+}) {
   const [open, setOpen] = useState(false);
   const ts =
     typeof event.timestamp === "number"
@@ -29,8 +35,12 @@ function TimelineEventRow({ event }: { event: TraceEvent }) {
       : String(event.timestamp);
   const payload = "payload" in event ? event.payload : null;
 
+  const id = stepId.replace(/\s/g, "-").toLowerCase();
   return (
-    <li className="rounded border border-zinc-700 bg-zinc-800/50 text-sm text-zinc-300">
+    <li
+      id={id}
+      className="scroll-mt-4 rounded border border-zinc-700 bg-zinc-800/50 text-sm text-zinc-300"
+    >
       <button
         type="button"
         onClick={() => setOpen(!open)}

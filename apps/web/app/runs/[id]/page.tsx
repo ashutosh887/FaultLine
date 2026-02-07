@@ -89,7 +89,12 @@ export default async function RunDetailPage({
                 <ul className="mt-1 list-inside list-disc space-y-0.5 text-zinc-400">
                   {report.verdict.evidence_links.map((e, i) => (
                     <li key={i}>
-                      {e.step_id}
+                      <a
+                        href={`#${e.step_id.replace(/\s/g, "-").toLowerCase()}`}
+                        className="text-emerald-400 hover:text-emerald-300 hover:underline"
+                      >
+                        {e.step_id}
+                      </a>
                       {e.snippet ? ` — ${e.snippet}` : ""}
                     </li>
                   ))}
@@ -101,7 +106,26 @@ export default async function RunDetailPage({
                 <span className="text-zinc-500">Contributing factors:</span>
                 <ol className="mt-1 list-inside list-decimal space-y-1 text-zinc-400">
                   {report.verdict.contributing_factors.map((f, i) => (
-                    <li key={i}>{f.description}</li>
+                    <li key={i}>
+                      {f.description}
+                      {f.evidence_links.length > 0 && (
+                        <span className="ml-1">
+                          (
+                          {f.evidence_links.map((e, j) => (
+                            <span key={j}>
+                              {j > 0 && ", "}
+                              <a
+                                href={`#${e.step_id.replace(/\s/g, "-").toLowerCase()}`}
+                                className="text-emerald-400 hover:text-emerald-300 hover:underline"
+                              >
+                                {e.step_id}
+                              </a>
+                            </span>
+                          ))}
+                          )
+                        </span>
+                      )}
+                    </li>
                   ))}
                 </ol>
               </div>
@@ -132,7 +156,25 @@ export default async function RunDetailPage({
                 <ul className="mt-1 list-inside list-disc space-y-0.5 text-zinc-400">
                   {report.verdict.fix_suggestions.map((f, i) => (
                     <li key={i}>
-                      [{f.category}] {f.description}
+                      <span className="text-zinc-500">[{f.category}]</span>{" "}
+                      {f.description}
+                      {f.evidence_links && f.evidence_links.length > 0 && (
+                        <span className="ml-1">
+                          (
+                          {f.evidence_links.map((e, j) => (
+                            <span key={j}>
+                              {j > 0 && ", "}
+                              <a
+                                href={`#${e.step_id.replace(/\s/g, "-").toLowerCase()}`}
+                                className="text-emerald-400 hover:text-emerald-300 hover:underline"
+                              >
+                                {e.step_id}
+                              </a>
+                            </span>
+                          ))}
+                          )
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>

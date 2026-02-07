@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import type { EvidenceLink } from "@faultline/shared";
 
@@ -57,10 +58,13 @@ function ArtifactViewer({
   return (
     <div className="mt-2 rounded border border-zinc-700 bg-zinc-900/80 p-2">
       {isImage && (
-        <img
+        <Image
           src={url}
           alt="Evidence artifact"
+          width={400}
+          height={256}
           className="max-h-64 max-w-full object-contain"
+          unoptimized
         />
       )}
       {isAudio && (

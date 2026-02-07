@@ -1,19 +1,25 @@
 import Link from "next/link";
+import { getRuns } from "@/app/lib/runs";
 
-async function getRuns() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_INGEST_URL || "http://localhost:3000"}/api/runs`,
-    {
-      cache: "no-store",
-    },
+export const dynamic = "force-dynamic";
+
+function StatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    analyzed: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+    succeeded: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+    completed: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+    failed: "bg-red-500/20 text-red-400 border-red-500/40",
+    running: "bg-amber-500/20 text-amber-400 border-amber-500/40",
+  };
+  return (
+    <span
+      className={`rounded border px-2 py-0.5 text-xs font-medium ${
+        styles[status] ?? "bg-zinc-500/20 text-zinc-400 border-zinc-500/40"
+      }`}
+    >
+      {status}
+    </span>
   );
-  const data = await res.json();
-  return data.runs as Array<{
-    id: string;
-    status: string;
-    duration_ms?: number;
-    failure_reason?: string;
-  }>;
 }
 
 export default async function RunsPage() {
@@ -23,7 +29,9 @@ export default async function RunsPage() {
     <main className="mx-auto max-w-4xl px-6 py-12">
       <h1 className="text-2xl font-semibold text-zinc-100">Runs</h1>
       <p className="mt-2 text-zinc-500">
-        Traces will appear here. Ingest events via POST /api/ingest.
+        {runs.length === 0
+          ? "No traces yet. Run npm run seed for demo data, or ingest events via POST /api/ingest."
+          : `${runs.length} trace${runs.length === 1 ? "" : "s"}`}
       </p>
       <div className="mt-8 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/50">
         <table className="w-full text-left text-sm">
@@ -50,7 +58,9 @@ export default async function RunsPage() {
                   className="border-b border-zinc-800 text-zinc-300 last:border-0"
                 >
                   <td className="p-3 font-mono text-xs">{run.id}</td>
-                  <td className="p-3">{run.status}</td>
+                  <td className="p-3">
+                    <StatusBadge status={run.status} />
+                  </td>
                   <td className="p-3">
                     {run.duration_ms != null ? `${run.duration_ms}ms` : "—"}
                   </td>
@@ -60,7 +70,7 @@ export default async function RunsPage() {
                   <td className="p-3">
                     <Link
                       href={`/runs/${run.id}`}
-                      className="text-zinc-400 hover:text-zinc-200"
+                      className="rounded bg-zinc-800 px-3 py-1 text-sm text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100"
                     >
                       View
                     </Link>
