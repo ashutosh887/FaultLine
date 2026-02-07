@@ -1,8 +1,22 @@
 import { Worker, Queue } from "bullmq";
 import { FORENSICS_QUEUE_NAME, FORENSICS_DLQ_NAME } from "@faultline/shared";
 import { logWithTrace } from "@faultline/shared";
-import { getEvents, incrJobFailed, incrJobSuccess, storeReport } from "./redis-store.js";
+import {
+  getEvents,
+  getReport,
+  incrJobFailed,
+  incrJobSuccess,
+  setRunStatus,
+  storeReport,
+} from "./redis-store.js";
+import { createHash } from "crypto";
 import { analyzeTrace } from "./gemini.js";
+
+function eventsHash(
+  events: { type: string; timestamp: unknown; payload: unknown }[],
+): string {
+  return createHash("sha256").update(JSON.stringify(events)).digest("hex");
+}
 
 const REDIS_HOST = process.env.REDIS_HOST ?? "localhost";
 const REDIS_PORT = parseInt(process.env.REDIS_PORT ?? "6379", 10);
@@ -29,6 +43,14 @@ async function processForensicsJob(job: {
       return;
     }
 
+    const hash = eventsHash(events);
+    const existing = await getReport(trace_id);
+    if (existing.verdict && existing.events_hash === hash) {
+      logWithTrace(trace_id, "forensics_cached", { jobId });
+      await incrJobSuccess();
+      return;
+    }
+
     logWithTrace(trace_id, "forensics_calling_gemini", {
       jobId,
       event_count: events.length,
@@ -36,7 +58,8 @@ async function processForensicsJob(job: {
 
     const { verdict, causal_graph } = await analyzeTrace(trace_id, events);
 
-    await storeReport(trace_id, verdict, causal_graph);
+    await storeReport(trace_id, verdict, causal_graph, hash);
+    await setRunStatus(trace_id, { status: "analyzed" });
     await incrJobSuccess();
 
     logWithTrace(trace_id, "forensics_completed", {

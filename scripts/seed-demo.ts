@@ -35,7 +35,7 @@ async function storeReport(
 async function setRunStatus(
   trace_id: string,
   run: {
-    status: "running" | "failed" | "completed";
+    status: "running" | "failed" | "completed" | "succeeded";
     failure_reason?: string;
     failure_event_id?: string;
   },
@@ -50,14 +50,18 @@ const badVerdict: VerdictPack = {
   root_cause:
     "The flight_search tool rejected the date format (2026-02-04) with error 'Invalid date format: expected YYYY-MM-DD but got 2026-02-04'. The tool expects YYYY-MM-DD but received a value that triggered validation failure.",
   evidence_links: [
-    { step_id: "Step 2", snippet: "Invalid date format: expected YYYY-MM-DD but got 2026-02-04" },
+    {
+      step_id: "Step 2",
+      snippet: "Invalid date format: expected YYYY-MM-DD but got 2026-02-04",
+    },
   ],
   confidence_root_cause: 0.92,
   confidence_factors: 0.88,
   contributing_factors: [
     {
       rank: 1,
-      description: "Tool input validation mismatch — agent passed date in wrong format",
+      description:
+        "Tool input validation mismatch — agent passed date in wrong format",
       evidence_links: [{ step_id: "Step 2" }],
     },
     {
@@ -71,12 +75,14 @@ const badVerdict: VerdictPack = {
   fix_suggestions: [
     {
       category: "prompt",
-      description: "Add instruction to always format dates as YYYY-MM-DD for flight_search",
+      description:
+        "Add instruction to always format dates as YYYY-MM-DD for flight_search",
       evidence_links: [{ step_id: "Step 2" }],
     },
     {
       category: "tooling",
-      description: "Add input validation/transform layer before flight_search to normalize date format",
+      description:
+        "Add input validation/transform layer before flight_search to normalize date format",
       evidence_links: [{ step_id: "Step 2" }],
     },
   ],
@@ -86,7 +92,11 @@ const fixedVerdict: VerdictPack = {
   root_cause:
     "No failure — the run completed successfully. The flight_search tool accepted the date format and returned flight options.",
   evidence_links: [
-    { step_id: "Step 2", snippet: "input: { origin: 'NYC', destination: 'LAX', date: '2026-02-05' }" },
+    {
+      step_id: "Step 2",
+      snippet:
+        "input: { origin: 'NYC', destination: 'LAX', date: '2026-02-05' }",
+    },
   ],
   confidence_root_cause: 0.95,
   confidence_factors: 0.9,
@@ -104,8 +114,18 @@ const fixedVerdict: VerdictPack = {
 const badGraph: CausalGraph = {
   nodes: [
     { id: "n1", label: "User request", type: "step", step_id: "Step 1" },
-    { id: "n2", label: "Flight search error", type: "tool_output", step_id: "Step 2" },
-    { id: "n3", label: "Model reports failure", type: "step", step_id: "Step 3" },
+    {
+      id: "n2",
+      label: "Flight search error",
+      type: "tool_output",
+      step_id: "Step 2",
+    },
+    {
+      id: "n3",
+      label: "Model reports failure",
+      type: "step",
+      step_id: "Step 3",
+    },
   ],
   edges: [
     { id: "e1", source: "n1", target: "n2", type: "depends_on" },
@@ -117,8 +137,18 @@ const badGraph: CausalGraph = {
 const fixedGraph: CausalGraph = {
   nodes: [
     { id: "n1", label: "User request", type: "step", step_id: "Step 1" },
-    { id: "n2", label: "Flight search success", type: "tool_output", step_id: "Step 2" },
-    { id: "n3", label: "Model returns result", type: "step", step_id: "Step 3" },
+    {
+      id: "n2",
+      label: "Flight search success",
+      type: "tool_output",
+      step_id: "Step 2",
+    },
+    {
+      id: "n3",
+      label: "Model returns result",
+      type: "step",
+      step_id: "Step 3",
+    },
   ],
   edges: [
     { id: "e1", source: "n1", target: "n2", type: "depends_on" },
@@ -200,7 +230,7 @@ async function seed() {
   });
   await storeReport(trace1, badVerdict, badGraph);
 
-  await setRunStatus(trace2, { status: "completed" });
+  await setRunStatus(trace2, { status: "succeeded" });
   await storeReport(trace2, fixedVerdict, fixedGraph);
 
   console.log("✓ Seeded demo traces:", trace1, trace2);
