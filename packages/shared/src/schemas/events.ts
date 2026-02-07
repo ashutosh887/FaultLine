@@ -86,6 +86,7 @@ export const eventSchemaVersionSchema = z.enum(["v1", "v2"]);
 export const ingestBodySchema = z.object({
   trace_id: z.string().optional(),
   session_id: z.string().optional(),
+  project_id: z.string().optional().default("default"),
   event_schema_version: eventSchemaVersionSchema.optional().default("v1"),
   events: z.array(traceEventSchema).min(1),
 });
