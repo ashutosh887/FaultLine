@@ -67,3 +67,22 @@ npm run dev:worker
 - **Runs:** http://localhost:3000/runs
 
 Each app has its own `.env.example`; copy to `.env` where needed.
+
+## Demo Setup
+
+After starting services, seed demo data:
+
+```bash
+npm run seed
+```
+
+This creates two demo traces:
+
+- `demo-bad-run`: Failed flight booking (tool error)
+- `demo-fixed-run`: Successful flight booking
+
+See `DEMO.md` for the 3-minute demo script.
+
+## Gemini Integration
+
+FaultLine uses **Gemini 2.0 Flash Experimental** for automated root-cause analysis. See `GEMINI_INTEGRATION.md` for details on how Gemini 3 features are used.
