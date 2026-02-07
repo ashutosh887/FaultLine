@@ -1,4 +1,5 @@
 export const INGEST_MAX_BODY_BYTES = 1 * 1024 * 1024;
+export const GEMINI_MAX_OUTPUT_TOKENS = 4096;
 
 export const FORENSICS_QUEUE_NAME = "faultline:forensics";
 export const FORENSICS_DLQ_NAME = "faultline:forensics:failed";
