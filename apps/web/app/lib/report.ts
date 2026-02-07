@@ -24,8 +24,7 @@ export async function getReport(trace_id: string): Promise<ReportData> {
   const { verdict, causal_graph } = await getStoredReport(trace_id);
   const run = await getRunStatus(trace_id);
   const failure_anchor: FailureAnchor | null =
-    run?.status === "failed" &&
-    (run.failure_reason ?? run.failure_event_id)
+    run?.status === "failed" && (run.failure_reason ?? run.failure_event_id)
       ? {
           failure_event_id: run.failure_event_id,
           failure_reason: run.failure_reason,
