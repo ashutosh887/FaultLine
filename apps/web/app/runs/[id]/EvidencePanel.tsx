@@ -14,7 +14,9 @@ function ArtifactViewer({ artifactKey }: { artifactKey: string }) {
     fetch(url, { method: "GET" })
       .then((r) => {
         if (!r.ok) throw new Error("Failed to load");
-        setContentType(r.headers.get("Content-Type") ?? "application/octet-stream");
+        setContentType(
+          r.headers.get("Content-Type") ?? "application/octet-stream",
+        );
       })
       .catch(() => setError("Could not load artifact"));
   };
