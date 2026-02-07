@@ -214,23 +214,30 @@ function formatEventsForPrompt(events: TraceEvent[]): string {
     .join("\n\n");
 }
 
+const QUICK_MODE = process.env.GEMINI_QUICK_MODE === "true";
+
 function buildPrompt(events: TraceEvent[]): string {
   const sliced = sliceRelevantEvents(events);
+  const toSend =
+    QUICK_MODE && sliced.length > 20 ? sliced.slice(0, 15) : sliced;
   const truncatedNote =
-    events.length > sliced.length
-      ? `\n[Note: Trace truncated from ${events.length} to ${sliced.length} events for analysis. Error events and head/tail preserved.]\n\n`
+    events.length > toSend.length
+      ? `\n[Note: Trace truncated from ${events.length} to ${toSend.length} events for analysis.]\n\n`
       : "";
-  return `You are a root-cause analysis expert for AI agent systems. Analyze the following trace of events and produce a structured forensic report.
-${truncatedNote}
-Trace events:
-${formatEventsForPrompt(sliced)}
-
-Analyze this trace and identify:
-1. Root cause: What was the primary reason for failure or unexpected behavior? Be specific and reference step numbers.
+  const instructions = QUICK_MODE
+    ? "Identify root cause, top 2 evidence links, top 2 factors, one counterfactual, 1-2 fix suggestions. Keep causal graph minimal (3-5 nodes)."
+    : `1. Root cause: What was the primary reason for failure or unexpected behavior? Be specific and reference step numbers.
 2. Evidence links: Reference specific step IDs (use "Step 1", "Step 2", etc.) and include relevant snippets from those steps.
 3. Contributing factors: Rank the top 3-5 factors (rank 1 = most important) that contributed to the issue. Each must have evidence links.
 4. Counterfactual: What would have changed the outcome? Use "If X, then Y" format.
-5. Fix suggestions: Provide 2-4 actionable fixes, categorized as: prompt, tooling, memory, orchestration, or safety. Each should reference evidence.
+5. Fix suggestions: Provide 2-4 actionable fixes, categorized as: prompt, tooling, memory, orchestration, or safety. Each should reference evidence.`;
+  return `You are a root-cause analysis expert for AI agent systems. Analyze the following trace of events and produce a structured forensic report.
+${truncatedNote}
+Trace events:
+${formatEventsForPrompt(toSend)}
+
+Analyze this trace and identify:
+${instructions}
 
 Build a causal graph showing:
 - Nodes: Each significant step, assumption, tool output, or decision point
