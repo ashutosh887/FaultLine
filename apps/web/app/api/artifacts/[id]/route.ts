@@ -6,7 +6,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const artifact = await getArtifact(id);
+  let artifact;
+  try {
+    artifact = await getArtifact(id);
+  } catch {
+    return NextResponse.json({ error: "Artifact corrupted" }, { status: 500 });
+  }
   if (!artifact) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
