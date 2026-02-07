@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import {
   getAllTraceIds,
   getEvents,
@@ -6,8 +6,10 @@ import {
   getRunStatus,
 } from "@/app/lib/redis-store";
 
-export async function GET() {
-  const traceIds = await getAllTraceIds();
+export async function GET(request: NextRequest) {
+  const project_id =
+    request.nextUrl.searchParams.get("project_id") ?? undefined;
+  const traceIds = await getAllTraceIds(project_id);
   const runs = await Promise.all(
     traceIds.map(async (id) => {
       const events = await getEvents(id);

@@ -1,11 +1,18 @@
-import { NextResponse } from "next/server";
-import { getArtifact } from "@/app/lib/redis-store";
+import { NextRequest, NextResponse } from "next/server";
+import { getArtifact, isArtifactInTrace } from "@/app/lib/redis-store";
 
 export async function GET(
-  _request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const trace_id = request.nextUrl.searchParams.get("trace_id");
+  if (trace_id) {
+    const allowed = await isArtifactInTrace(trace_id, id);
+    if (!allowed) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
   let artifact;
   try {
     artifact = await getArtifact(id);
