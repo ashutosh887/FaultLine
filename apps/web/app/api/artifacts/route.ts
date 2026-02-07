@@ -5,7 +5,6 @@ import { storeArtifact } from "@/app/lib/redis-store";
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const file = formData.get("file");
-  const trace_id = formData.get("trace_id") as string | null;
 
   if (!file || typeof file === "string") {
     return NextResponse.json(
