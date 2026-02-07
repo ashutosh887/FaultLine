@@ -24,6 +24,7 @@ const PROJECT_TRACES_KEY = (project_id: string) =>
   `faultline:project:${project_id}:traces`;
 const TRACE_PROJECT_KEY = (trace_id: string) =>
   `faultline:trace_project:${trace_id}`;
+const REPLAY_KEY = (trace_id: string) => `faultline:replay:${trace_id}`;
 const ARTIFACT_KEY = (id: string) => `faultline:artifact:${id}`;
 const METRICS_INGEST = "faultline:metrics:ingest_total";
 const METRICS_JOB_SUCCESS = "faultline:metrics:job_success_total";
@@ -152,16 +153,27 @@ export async function storeEvents(
   trace_id: string,
   events: TraceEvent[],
   project_id = "default",
+  replay = false,
 ): Promise<void> {
   const r = getRedis();
   try {
     await r.connect();
   } catch {}
-  const existing = await getEvents(trace_id);
-  const existingKeys = new Set(existing.map(eventKey));
-  const newEvents = events.filter((e) => !existingKeys.has(eventKey(e)));
-  const all = sortEvents([...existing, ...newEvents]);
-  await r.set(EVENTS_KEY(trace_id), JSON.stringify(all));
+  const isReplay = await r.get(REPLAY_KEY(trace_id));
+  if (isReplay && !replay) {
+    throw new Error("Trace is frozen (replay mode); cannot append events");
+  }
+  if (replay) {
+    const all = sortEvents(events);
+    await r.set(EVENTS_KEY(trace_id), JSON.stringify(all));
+    await r.set(REPLAY_KEY(trace_id), "1");
+  } else {
+    const existing = await getEvents(trace_id);
+    const existingKeys = new Set(existing.map(eventKey));
+    const newEvents = events.filter((e) => !existingKeys.has(eventKey(e)));
+    const all = sortEvents([...existing, ...newEvents]);
+    await r.set(EVENTS_KEY(trace_id), JSON.stringify(all));
+  }
   await r.sadd(TRACES_KEY, trace_id);
   await r.sadd(PROJECT_TRACES_KEY(project_id), trace_id);
   await r.set(TRACE_PROJECT_KEY(trace_id), project_id);
@@ -308,6 +320,7 @@ export async function deleteTrace(trace_id: string): Promise<void> {
     r.del(REPORT_KEY(trace_id)),
     r.del(RUN_KEY(trace_id)),
     r.del(TRACE_PROJECT_KEY(trace_id)),
+    r.del(REPLAY_KEY(trace_id)),
     r.srem(TRACES_KEY, trace_id),
     ...(project_id ? [r.srem(PROJECT_TRACES_KEY(project_id), trace_id)] : []),
   ]);

@@ -87,6 +87,7 @@ export const ingestBodySchema = z.object({
   trace_id: z.string().optional(),
   session_id: z.string().optional(),
   project_id: z.string().optional().default("default"),
+  replay: z.boolean().optional().default(false),
   event_schema_version: eventSchemaVersionSchema.optional().default("v1"),
   events: z.array(traceEventSchema).min(1),
 });

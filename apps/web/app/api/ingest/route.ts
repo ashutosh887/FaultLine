@@ -44,8 +44,9 @@ export async function POST(request: NextRequest) {
   const trace_id = parsed.data.trace_id ?? randomBytes(16).toString("hex");
   const session_id = parsed.data.session_id;
   const project_id = parsed.data.project_id ?? "default";
+  const replay = parsed.data.replay ?? false;
   try {
-    await storeEvents(trace_id, parsed.data.events, project_id);
+    await storeEvents(trace_id, parsed.data.events, project_id, replay);
     await incrIngestCount();
     const jobId = await enqueueForensicsJob(trace_id, session_id);
     logWithTrace(trace_id, "ingest_accepted", {
