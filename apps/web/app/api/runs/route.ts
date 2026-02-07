@@ -26,7 +26,7 @@ export async function GET() {
           : undefined;
 
       const status = runStatus
-        ? runStatus.status === "failed" || runStatus.status === "completed"
+        ? ["failed", "completed", "succeeded"].includes(runStatus.status)
           ? runStatus.status
           : verdict
             ? "analyzed"
@@ -37,7 +37,7 @@ export async function GET() {
       const failure_reason =
         runStatus?.status === "failed" && runStatus.failure_reason
           ? runStatus.failure_reason
-          : verdict?.root_cause ?? undefined;
+          : (verdict?.root_cause ?? undefined);
 
       return {
         id,
