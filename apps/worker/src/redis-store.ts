@@ -10,6 +10,8 @@ const redis = new Redis({
 const EVENTS_KEY = (trace_id: string) => `faultline:events:${trace_id}`;
 const REPORT_KEY = (trace_id: string) => `faultline:report:${trace_id}`;
 const TRACES_KEY = "faultline:traces";
+const METRICS_JOB_SUCCESS = "faultline:metrics:job_success_total";
+const METRICS_JOB_FAILED = "faultline:metrics:job_failed_total";
 
 export async function storeEvents(
   trace_id: string,
@@ -50,4 +52,12 @@ export async function getReport(trace_id: string): Promise<{
 
 export async function getAllTraceIds(): Promise<string[]> {
   return redis.smembers(TRACES_KEY);
+}
+
+export async function incrJobSuccess(): Promise<void> {
+  await redis.incr(METRICS_JOB_SUCCESS);
+}
+
+export async function incrJobFailed(): Promise<void> {
+  await redis.incr(METRICS_JOB_FAILED);
 }
