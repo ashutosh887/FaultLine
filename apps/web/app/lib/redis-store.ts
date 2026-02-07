@@ -20,6 +20,10 @@ const EVENTS_KEY = (trace_id: string) => `faultline:events:${trace_id}`;
 const REPORT_KEY = (trace_id: string) => `faultline:report:${trace_id}`;
 const RUN_KEY = (trace_id: string) => `faultline:run:${trace_id}`;
 const TRACES_KEY = "faultline:traces";
+const PROJECT_TRACES_KEY = (project_id: string) =>
+  `faultline:project:${project_id}:traces`;
+const TRACE_PROJECT_KEY = (trace_id: string) =>
+  `faultline:trace_project:${trace_id}`;
 const ARTIFACT_KEY = (id: string) => `faultline:artifact:${id}`;
 const METRICS_INGEST = "faultline:metrics:ingest_total";
 const METRICS_JOB_SUCCESS = "faultline:metrics:job_success_total";
@@ -97,6 +101,7 @@ export type RunStatus = {
   status: "running" | "failed" | "completed" | "succeeded";
   failure_reason?: string;
   failure_event_id?: string;
+  project_id?: string;
 };
 
 export async function getRunStatus(
@@ -146,6 +151,7 @@ function sortEvents(events: TraceEvent[]): TraceEvent[] {
 export async function storeEvents(
   trace_id: string,
   events: TraceEvent[],
+  project_id = "default",
 ): Promise<void> {
   const r = getRedis();
   try {
@@ -157,6 +163,8 @@ export async function storeEvents(
   const all = sortEvents([...existing, ...newEvents]);
   await r.set(EVENTS_KEY(trace_id), JSON.stringify(all));
   await r.sadd(TRACES_KEY, trace_id);
+  await r.sadd(PROJECT_TRACES_KEY(project_id), trace_id);
+  await r.set(TRACE_PROJECT_KEY(trace_id), project_id);
 }
 
 export async function getEvents(trace_id: string): Promise<TraceEvent[]> {
@@ -184,12 +192,36 @@ export async function getReport(trace_id: string): Promise<{
   return JSON.parse(data);
 }
 
-export async function getAllTraceIds(): Promise<string[]> {
+export async function getAllTraceIds(project_id?: string): Promise<string[]> {
   const r = getRedis();
   try {
     await r.connect();
   } catch {}
+  if (project_id) {
+    return r.smembers(PROJECT_TRACES_KEY(project_id));
+  }
   return r.smembers(TRACES_KEY);
+}
+
+export async function isArtifactInTrace(
+  trace_id: string,
+  artifact_id: string,
+): Promise<boolean> {
+  const events = await getEvents(trace_id);
+  for (const e of events) {
+    const payload = e.payload as { content_ref?: { key?: string } };
+    if (payload?.content_ref?.key === artifact_id) return true;
+  }
+  const { verdict } = await getReport(trace_id);
+  if (verdict) {
+    const links = [
+      ...verdict.evidence_links,
+      ...verdict.contributing_factors.flatMap((f) => f.evidence_links),
+      ...(verdict.fix_suggestions ?? []).flatMap((f) => f.evidence_links ?? []),
+    ];
+    if (links.some((l) => l.artifact_key === artifact_id)) return true;
+  }
+  return false;
 }
 
 export async function checkRedis(): Promise<boolean> {
@@ -270,10 +302,13 @@ export async function deleteTrace(trace_id: string): Promise<void> {
   try {
     await r.connect();
   } catch {}
+  const project_id = await r.get(TRACE_PROJECT_KEY(trace_id));
   await Promise.all([
     r.del(EVENTS_KEY(trace_id)),
     r.del(REPORT_KEY(trace_id)),
     r.del(RUN_KEY(trace_id)),
+    r.del(TRACE_PROJECT_KEY(trace_id)),
     r.srem(TRACES_KEY, trace_id),
+    ...(project_id ? [r.srem(PROJECT_TRACES_KEY(project_id), trace_id)] : []),
   ]);
 }
