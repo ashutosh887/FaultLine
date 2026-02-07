@@ -1,7 +1,7 @@
 import { Worker, Queue } from "bullmq";
 import { FORENSICS_QUEUE_NAME, FORENSICS_DLQ_NAME } from "@faultline/shared";
 import { logWithTrace } from "@faultline/shared";
-import { getEvents, storeReport } from "./redis-store.js";
+import { getEvents, incrJobFailed, incrJobSuccess, storeReport } from "./redis-store.js";
 import { analyzeTrace } from "./gemini.js";
 
 const REDIS_HOST = process.env.REDIS_HOST ?? "localhost";
@@ -37,12 +37,14 @@ async function processForensicsJob(job: {
     const { verdict, causal_graph } = await analyzeTrace(trace_id, events);
 
     await storeReport(trace_id, verdict, causal_graph);
+    await incrJobSuccess();
 
     logWithTrace(trace_id, "forensics_completed", {
       jobId,
       root_cause: verdict.root_cause.substring(0, 50),
     });
   } catch (error) {
+    await incrJobFailed();
     logWithTrace(trace_id, "forensics_error", {
       jobId,
       error: String(error),
