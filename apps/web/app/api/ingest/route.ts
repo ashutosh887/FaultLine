@@ -8,6 +8,7 @@ import {
 import type { IngestBody } from "@faultline/shared";
 import { randomBytes } from "crypto";
 import { enqueueForensicsJob } from "@/app/lib/queue";
+import { reportError } from "@/app/lib/error-reporter";
 import { checkRateLimit, getRateLimitKey } from "@/app/lib/rate-limit";
 import { incrIngestCount, storeEvents } from "@/app/lib/redis-store";
 
@@ -43,19 +44,23 @@ export async function POST(request: NextRequest) {
   const trace_id = parsed.data.trace_id ?? randomBytes(16).toString("hex");
   const session_id = parsed.data.session_id;
   const project_id = parsed.data.project_id ?? "default";
+  try {
+    await storeEvents(trace_id, parsed.data.events, project_id);
+    await incrIngestCount();
+    const jobId = await enqueueForensicsJob(trace_id, session_id);
+    logWithTrace(trace_id, "ingest_accepted", {
+      events_received: parsed.data.events.length,
+      job_id: jobId,
+    });
 
-  await storeEvents(trace_id, parsed.data.events, project_id);
-  await incrIngestCount();
-  const jobId = await enqueueForensicsJob(trace_id, session_id);
-  logWithTrace(trace_id, "ingest_accepted", {
-    events_received: parsed.data.events.length,
-    job_id: jobId,
-  });
-
-  return NextResponse.json({
-    ok: true,
-    trace_id,
-    session_id: session_id ?? null,
-    events_received: parsed.data.events.length,
-  });
+    return NextResponse.json({
+      ok: true,
+      trace_id,
+      session_id: session_id ?? null,
+      events_received: parsed.data.events.length,
+    });
+  } catch (e) {
+    reportError(trace_id, "ingest", e);
+    throw e;
+  }
 }
