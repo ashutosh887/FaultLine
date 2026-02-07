@@ -11,6 +11,8 @@ const EVENTS_KEY = (trace_id: string) => `faultline:events:${trace_id}`;
 const REPORT_KEY = (trace_id: string) => `faultline:report:${trace_id}`;
 const RUN_KEY = (trace_id: string) => `faultline:run:${trace_id}`;
 const TRACES_KEY = "faultline:traces";
+const PROJECT_TRACES_KEY = (p: string) => `faultline:project:${p}:traces`;
+const TRACE_PROJECT_KEY = (t: string) => `faultline:trace_project:${t}`;
 
 async function storeEvents(
   trace_id: string,
@@ -19,6 +21,8 @@ async function storeEvents(
   await redis.connect();
   await redis.set(EVENTS_KEY(trace_id), JSON.stringify(events));
   await redis.sadd(TRACES_KEY, trace_id);
+  await redis.sadd(PROJECT_TRACES_KEY("default"), trace_id);
+  await redis.set(TRACE_PROJECT_KEY(trace_id), "default");
 }
 
 async function storeReport(
