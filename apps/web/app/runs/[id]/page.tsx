@@ -108,6 +108,20 @@ export default async function RunDetailPage({
                 {report.verdict.counterfactual}
               </p>
             )}
+            {report.verdict.contradictions &&
+              report.verdict.contradictions.length > 0 && (
+                <div>
+                  <span className="text-zinc-500">Contradictions:</span>
+                  <ul className="mt-1 list-inside list-disc space-y-0.5 text-amber-400">
+                    {report.verdict.contradictions.map((c, i) => (
+                      <li key={i}>
+                        {c.claim_a} vs {c.claim_b}
+                        {c.description ? ` — ${c.description}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             {report.verdict.fix_suggestions.length > 0 && (
               <div>
                 <span className="text-zinc-500">Fix suggestions:</span>
