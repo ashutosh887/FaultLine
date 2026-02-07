@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { EvidenceLink } from "@faultline/shared";
 import { getReport } from "@/app/lib/report";
+import { DeleteRunButton } from "./DeleteRunButton";
 import { ReportDownloadButton } from "./ReportDownloadButton";
 import { TimelineView } from "./TimelineView";
 import { CausalGraphView } from "./CausalGraphView";
@@ -18,7 +19,10 @@ export default async function RunDetailPage({
     <main className="mx-auto max-w-5xl px-6 py-12">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold text-zinc-100">Run {id}</h1>
-        <ReportDownloadButton traceId={id} />
+        <div className="flex gap-2">
+          <ReportDownloadButton traceId={id} />
+          <DeleteRunButton traceId={id} />
+        </div>
       </div>
       <Link
         href="/runs"
@@ -141,16 +145,19 @@ export default async function RunDetailPage({
           </p>
         )}
       </section>
-      {report.verdict && (() => {
-        const links: EvidenceLink[] = [
-          ...report.verdict.evidence_links,
-          ...report.verdict.contributing_factors.flatMap((f) => f.evidence_links),
-          ...report.verdict.fix_suggestions.flatMap(
-            (f) => f.evidence_links ?? [],
-          ),
-        ];
-        return <EvidencePanel evidenceLinks={links} />;
-      })()}
+      {report.verdict &&
+        (() => {
+          const links: EvidenceLink[] = [
+            ...report.verdict.evidence_links,
+            ...report.verdict.contributing_factors.flatMap(
+              (f) => f.evidence_links,
+            ),
+            ...report.verdict.fix_suggestions.flatMap(
+              (f) => f.evidence_links ?? [],
+            ),
+          ];
+          return <EvidencePanel evidenceLinks={links} />;
+        })()}
     </main>
   );
 }
