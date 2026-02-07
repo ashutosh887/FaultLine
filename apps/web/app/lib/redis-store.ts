@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { Redis } from "ioredis";
 import type { TraceEvent, VerdictPack, CausalGraph } from "@faultline/shared";
 
@@ -27,6 +28,22 @@ const METRICS_INGEST_TS = "faultline:metrics:ingest_ts";
 
 const ARTIFACT_MAX_BYTES = 5 * 1024 * 1024;
 
+const ALLOWED_CONTENT_TYPES = [
+  "image/",
+  "audio/",
+  "video/",
+  "text/",
+  "application/json",
+  "application/pdf",
+  "application/octet-stream",
+];
+
+function isValidContentType(ct: string): boolean {
+  return ALLOWED_CONTENT_TYPES.some(
+    (allowed) => ct === allowed || ct.startsWith(allowed.replace("*", "")),
+  );
+}
+
 export async function storeArtifact(
   id: string,
   content_type: string,
@@ -35,6 +52,11 @@ export async function storeArtifact(
   if (data.length > ARTIFACT_MAX_BYTES) {
     throw new Error("Artifact too large");
   }
+  const ct = content_type || "application/octet-stream";
+  if (!isValidContentType(ct)) {
+    throw new Error(`Invalid content type: ${ct}`);
+  }
+  const sha256 = createHash("sha256").update(data).digest("hex");
   const r = getRedis();
   try {
     await r.connect();
@@ -42,25 +64,32 @@ export async function storeArtifact(
   await r.set(
     ARTIFACT_KEY(id),
     JSON.stringify({
-      content_type,
+      content_type: ct,
       data_base64: data.toString("base64"),
+      sha256,
     }),
   );
 }
 
 export async function getArtifact(
   id: string,
-): Promise<{ content_type: string; data: Buffer } | null> {
+): Promise<{ content_type: string; data: Buffer; sha256?: string } | null> {
   const r = getRedis();
   try {
     await r.connect();
   } catch {}
   const raw = await r.get(ARTIFACT_KEY(id));
   if (!raw) return null;
-  const { content_type, data_base64 } = JSON.parse(raw);
+  const { content_type, data_base64, sha256 } = JSON.parse(raw);
+  const data = Buffer.from(data_base64, "base64");
+  if (sha256) {
+    const actual = createHash("sha256").update(data).digest("hex");
+    if (actual !== sha256) throw new Error("Artifact checksum mismatch");
+  }
   return {
     content_type: content_type ?? "application/octet-stream",
-    data: Buffer.from(data_base64, "base64"),
+    data,
+    sha256,
   };
 }
 
@@ -161,6 +190,17 @@ export async function getAllTraceIds(): Promise<string[]> {
     await r.connect();
   } catch {}
   return r.smembers(TRACES_KEY);
+}
+
+export async function checkRedis(): Promise<boolean> {
+  const r = getRedis();
+  try {
+    await r.connect();
+    await r.ping();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function incrIngestCount(): Promise<void> {
