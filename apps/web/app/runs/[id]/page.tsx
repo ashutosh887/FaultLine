@@ -156,7 +156,7 @@ export default async function RunDetailPage({
               (f) => f.evidence_links ?? [],
             ),
           ];
-          return <EvidencePanel evidenceLinks={links} />;
+          return <EvidencePanel evidenceLinks={links} traceId={id} />;
         })()}
     </main>
   );

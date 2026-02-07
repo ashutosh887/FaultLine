@@ -3,10 +3,16 @@
 import { useState } from "react";
 import type { EvidenceLink } from "@faultline/shared";
 
-function ArtifactViewer({ artifactKey }: { artifactKey: string }) {
+function ArtifactViewer({
+  artifactKey,
+  traceId,
+}: {
+  artifactKey: string;
+  traceId: string;
+}) {
   const [contentType, setContentType] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const url = `/api/artifacts/${artifactKey}`;
+  const url = `/api/artifacts/${artifactKey}?trace_id=${encodeURIComponent(traceId)}`;
 
   const load = () => {
     setError(null);
@@ -88,8 +94,10 @@ function ArtifactViewer({ artifactKey }: { artifactKey: string }) {
 
 export function EvidencePanel({
   evidenceLinks,
+  traceId,
 }: {
   evidenceLinks: EvidenceLink[];
+  traceId: string;
 }) {
   const withArtifact = evidenceLinks.filter((e) => e.artifact_key);
 
@@ -107,7 +115,10 @@ export function EvidencePanel({
             )}
             {e.artifact_key && (
               <div className="mt-1">
-                <ArtifactViewer artifactKey={e.artifact_key} />
+                <ArtifactViewer
+                  artifactKey={e.artifact_key}
+                  traceId={traceId}
+                />
               </div>
             )}
           </li>
