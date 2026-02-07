@@ -65,12 +65,14 @@ export async function getArtifact(
 }
 
 export type RunStatus = {
-  status: "running" | "failed" | "completed";
+  status: "running" | "failed" | "completed" | "succeeded";
   failure_reason?: string;
   failure_event_id?: string;
 };
 
-export async function getRunStatus(trace_id: string): Promise<RunStatus | null> {
+export async function getRunStatus(
+  trace_id: string,
+): Promise<RunStatus | null> {
   const r = getRedis();
   try {
     await r.connect();
@@ -91,14 +93,23 @@ export async function setRunStatus(
 }
 
 function eventKey(e: TraceEvent): string {
-  const ts = typeof e.timestamp === "number" ? e.timestamp : new Date(e.timestamp).getTime();
+  const ts =
+    typeof e.timestamp === "number"
+      ? e.timestamp
+      : new Date(e.timestamp).getTime();
   return `${ts}:${e.type}:${JSON.stringify(e.payload)}`;
 }
 
 function sortEvents(events: TraceEvent[]): TraceEvent[] {
   return [...events].sort((a, b) => {
-    const ta = typeof a.timestamp === "number" ? a.timestamp : new Date(a.timestamp).getTime();
-    const tb = typeof b.timestamp === "number" ? b.timestamp : new Date(b.timestamp).getTime();
+    const ta =
+      typeof a.timestamp === "number"
+        ? a.timestamp
+        : new Date(a.timestamp).getTime();
+    const tb =
+      typeof b.timestamp === "number"
+        ? b.timestamp
+        : new Date(b.timestamp).getTime();
     return ta - tb;
   });
 }
@@ -212,4 +223,17 @@ export async function incrJobFailed(): Promise<void> {
     await r.connect();
   } catch {}
   await r.incr(METRICS_JOB_FAILED);
+}
+
+export async function deleteTrace(trace_id: string): Promise<void> {
+  const r = getRedis();
+  try {
+    await r.connect();
+  } catch {}
+  await Promise.all([
+    r.del(EVENTS_KEY(trace_id)),
+    r.del(REPORT_KEY(trace_id)),
+    r.del(RUN_KEY(trace_id)),
+    r.srem(TRACES_KEY, trace_id),
+  ]);
 }
