@@ -21,6 +21,15 @@ export const verdictPackSchema = z.object({
     }),
   ),
   counterfactual: z.string().optional(),
+  contradictions: z
+    .array(
+      z.object({
+        claim_a: z.string(),
+        claim_b: z.string(),
+        description: z.string().optional(),
+      }),
+    )
+    .optional(),
   fix_suggestions: z.array(
     z.object({
       category: z.enum([
