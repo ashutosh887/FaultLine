@@ -73,6 +73,19 @@ function getResponseSchema() {
             },
           },
           counterfactual: { type: "string", description: "If-then statement" },
+          contradictions: {
+            type: "array",
+            description: "Inconsistent claims in trace (if any)",
+            items: {
+              type: "object",
+              properties: {
+                claim_a: { type: "string" },
+                claim_b: { type: "string" },
+                description: { type: "string" },
+              },
+              required: ["claim_a", "claim_b"],
+            },
+          },
           fix_suggestions: {
             type: "array",
             items: {
@@ -166,8 +179,26 @@ function getModel() {
       responseMimeType: "application/json",
       responseSchema: getResponseSchema() as any,
       temperature: 0.3,
+      maxOutputTokens: 4096,
     },
   });
+}
+
+const MAX_EVENTS_FOR_ANALYSIS = 80;
+const TOKEN_ESTIMATE_CHARS = 4;
+
+function sliceRelevantEvents(events: TraceEvent[]): TraceEvent[] {
+  if (events.length <= MAX_EVENTS_FOR_ANALYSIS) return events;
+  const kept = new Set<number>();
+  for (let i = 0; i < 40 && i < events.length; i++) kept.add(i);
+  events.forEach((e, i) => {
+    if (e.type === "tool_call" && (e.payload as { error?: string }).error)
+      kept.add(i);
+  });
+  for (let i = Math.max(0, events.length - 40); i < events.length; i++)
+    kept.add(i);
+  const indices = [...kept].sort((a, b) => a - b);
+  return indices.map((i) => events[i]);
 }
 
 function formatEventsForPrompt(events: TraceEvent[]): string {
@@ -184,10 +215,15 @@ function formatEventsForPrompt(events: TraceEvent[]): string {
 }
 
 function buildPrompt(events: TraceEvent[]): string {
+  const sliced = sliceRelevantEvents(events);
+  const truncatedNote =
+    events.length > sliced.length
+      ? `\n[Note: Trace truncated from ${events.length} to ${sliced.length} events for analysis. Error events and head/tail preserved.]\n\n`
+      : "";
   return `You are a root-cause analysis expert for AI agent systems. Analyze the following trace of events and produce a structured forensic report.
-
+${truncatedNote}
 Trace events:
-${formatEventsForPrompt(events)}
+${formatEventsForPrompt(sliced)}
 
 Analyze this trace and identify:
 1. Root cause: What was the primary reason for failure or unexpected behavior? Be specific and reference step numbers.
@@ -202,6 +238,8 @@ Build a causal graph showing:
 - First divergence: Identify the node ID where failure first became inevitable
 
 Provide confidence_root_cause and confidence_factors as numbers between 0 and 1 (how confident you are in the root cause and in the contributing factors).
+
+Contradiction check: If the trace contains inconsistent claims (e.g., model says X in one step but Y in another, or tool output contradicts earlier assumptions), list them in contradictions array with claim_a and claim_b. Use empty array [] if none.
 
 Return structured JSON with "verdict" and "causal_graph" keys matching the provided schema.`;
 }
