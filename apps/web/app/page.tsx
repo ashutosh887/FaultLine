@@ -8,7 +8,7 @@ export default function Home() {
         <div className="mb-20 text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-sm text-emerald-400">
             <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400"></span>
-            Powered by Gemini 2.0 Flash
+            Powered by Gemini 3
           </div>
           <h1 className="mb-4 bg-linear-to-r from-zinc-100 via-emerald-100 to-zinc-100 bg-clip-text text-6xl font-bold tracking-tight text-transparent">
             {SITE_NAME}

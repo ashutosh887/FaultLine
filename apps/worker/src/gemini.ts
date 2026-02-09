@@ -172,7 +172,7 @@ function getResponseSchema() {
 }
 
 function getModel() {
-  const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const modelName = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
   return genAI.getGenerativeModel({
     model: modelName,
     generationConfig: {
