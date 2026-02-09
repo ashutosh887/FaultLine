@@ -128,4 +128,4 @@ tracer.emit({
 
 ## Gemini Integration
 
-FaultLine uses **Gemini 2.0 Flash Experimental** for automated root-cause analysis. See `GEMINI_INTEGRATION.md` for details on how Gemini 3 features are used.
+FaultLine uses **Gemini 3** for automated root-cause analysis. See `GEMINI_INTEGRATION.md` for details.
