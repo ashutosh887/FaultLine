@@ -11,6 +11,7 @@ export type RunSummary = {
   duration_ms?: number;
   failure_reason?: string;
   failure_event_id?: string;
+  last_timestamp?: number;
 };
 
 export async function getRuns(project_id?: string): Promise<RunSummary[]> {
@@ -46,14 +47,21 @@ export async function getRuns(project_id?: string): Promise<RunSummary[]> {
           ? runStatus.failure_reason
           : (verdict?.root_cause ?? undefined);
 
+      const lastTimestamp = lastEvent
+        ? typeof lastEvent.timestamp === "number"
+          ? lastEvent.timestamp
+          : new Date(lastEvent.timestamp).getTime()
+        : 0;
+
       return {
         id,
         status,
         duration_ms,
         failure_reason,
         failure_event_id: runStatus?.failure_event_id,
+        last_timestamp: lastTimestamp,
       };
     }),
   );
-  return runs;
+  return runs.sort((a, b) => (b.last_timestamp ?? 0) - (a.last_timestamp ?? 0));
 }
