@@ -83,6 +83,48 @@ This creates two demo traces:
 
 See `DEMO.md` for the 3-minute demo script.
 
+## Integration
+
+### For Developers: Integrate FaultLine into Your AI Agent
+
+Use the FaultLine SDK to instrument your AI agent system:
+
+```bash
+npm install github:ashutosh887/FaultLine#packages/sdk
+```
+
+```typescript
+import { Tracer } from "@faultline/sdk";
+
+const tracer = new Tracer({
+  ingestUrl: "https://your-faultline-app.vercel.app",
+});
+
+// Emit events at key points
+tracer.emit({
+  type: "user_input",
+  payload: { text: "Book a flight..." },
+});
+
+tracer.emit({
+  type: "tool_call",
+  payload: {
+    tool_name: "flight_search",
+    input: { origin: "NYC", destination: "LAX" },
+  },
+});
+```
+
+**📖 Full integration guide:** See [`INTEGRATION.md`](./INTEGRATION.md) for:
+- Complete SDK documentation
+- Integration examples (LangChain, OpenAI, custom agents)
+- Event types and best practices
+- API integration (without SDK)
+
+**🚀 Deployment:** See [`DEPLOYMENT.md`](./DEPLOYMENT.md) for production setup.
+
+---
+
 ## Gemini Integration
 
 FaultLine uses **Gemini 2.0 Flash Experimental** for automated root-cause analysis. See `GEMINI_INTEGRATION.md` for details on how Gemini 3 features are used.
