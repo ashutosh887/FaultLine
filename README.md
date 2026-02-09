@@ -115,8 +115,9 @@ tracer.emit({
 });
 ```
 
-**📖 Full integration guide:** See [`INTEGRATION.md`](./INTEGRATION.md) for:
-- Complete SDK documentation
+**📖 Full integration guide:** 
+- **In-app docs:** Visit `/docs` on your deployed FaultLine instance
+- **GitHub:** See [`INTEGRATION.md`](./INTEGRATION.md) for complete documentation
 - Integration examples (LangChain, OpenAI, custom agents)
 - Event types and best practices
 - API integration (without SDK)

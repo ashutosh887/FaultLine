@@ -21,6 +21,12 @@ export default function Home() {
             >
               View Traces
             </Link>
+            <Link
+              href="/docs"
+              className="rounded-md border border-zinc-700 bg-zinc-900/50 px-6 py-2.5 text-sm font-medium text-zinc-200 transition hover:border-zinc-600 hover:bg-zinc-800/50"
+            >
+              Integration Guide
+            </Link>
             <a
               href="https://github.com/ashutosh887/faultline"
               target="_blank"
@@ -89,8 +95,11 @@ export default function Home() {
             </code>
           </div>
           <p className="mt-3 text-xs text-zinc-500">
-            See <span className="text-emerald-400">INTEGRATION.md</span> for
-            complete integration guide
+            See{" "}
+            <Link href="/docs" className="text-emerald-400 hover:underline">
+              Integration Guide
+            </Link>{" "}
+            for complete documentation
           </p>
         </div>
       </div>
