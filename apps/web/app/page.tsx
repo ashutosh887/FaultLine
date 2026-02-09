@@ -72,7 +72,9 @@ export default function Home() {
           </h3>
           <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4">
             <code className="block text-xs text-zinc-400">
-              <div className="mb-1 text-zinc-500">npm install @faultline/sdk</div>
+              <div className="mb-1 text-zinc-500">
+                npm install github:ashutosh887/FaultLine#packages/sdk
+              </div>
               <div className="mb-1">
                 const tracer = new Tracer({"{"}
               </div>
