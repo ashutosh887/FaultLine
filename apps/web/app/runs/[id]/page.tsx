@@ -17,8 +17,16 @@ export default async function RunDetailPage({
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold text-zinc-100">Run {id}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-zinc-100">Run {id}</h1>
+          {report.verdict && (
+            <p className="mt-1 text-sm text-zinc-500">
+              {report.timeline.length} event
+              {report.timeline.length === 1 ? "" : "s"} • Analyzed
+            </p>
+          )}
+        </div>
         <div className="flex gap-2">
           <ReportDownloadButton traceId={id} />
           <DeleteRunButton traceId={id} />

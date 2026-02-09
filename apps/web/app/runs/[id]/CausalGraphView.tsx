@@ -16,22 +16,49 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import type { CausalGraph } from "@faultline/shared";
 
-function layoutNodes(nodes: CausalGraph["nodes"]): Node[] {
-  const step = 180;
+function layoutNodes(
+  nodes: CausalGraph["nodes"],
+  firstDivergence?: string,
+): Node[] {
+  const step = 200;
   return nodes.map((n, i) => ({
     id: n.id,
     type: "default",
-    data: { label: n.label },
+    data: {
+      label: n.label,
+      style: firstDivergence === n.id ? { border: "2px solid #f59e0b" } : {},
+    },
     position: { x: (i % 3) * step, y: Math.floor(i / 3) * step },
+    style:
+      firstDivergence === n.id
+        ? {
+            border: "2px solid #f59e0b",
+            borderRadius: "8px",
+            background: "#fef3c7",
+            color: "#92400e",
+          }
+        : {},
   }));
 }
 
 function InnerGraph({ graph }: { graph: CausalGraph }) {
-  const initialNodes = layoutNodes(graph.nodes);
+  const initialNodes = layoutNodes(graph.nodes, graph.first_divergence_node_id);
   const initialEdges: Edge[] = graph.edges.map((e) => ({
     id: e.id,
     source: e.source,
     target: e.target,
+    style:
+      e.type === "contradicts"
+        ? { stroke: "#ef4444", strokeWidth: 2 }
+        : e.type === "leads_to"
+          ? { stroke: "#f59e0b", strokeWidth: 2 }
+          : {},
+    label:
+      e.type === "contradicts"
+        ? "contradicts"
+        : e.type === "leads_to"
+          ? "→"
+          : "",
   }));
   const [nodes, , onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -45,7 +72,16 @@ function InnerGraph({ graph }: { graph: CausalGraph }) {
   }
 
   return (
-    <div className="h-[280px] w-full rounded border border-zinc-700 bg-zinc-900">
+    <div className="h-[320px] w-full rounded border border-zinc-700 bg-zinc-900">
+      {graph.first_divergence_node_id && (
+        <p className="mb-2 text-xs text-amber-400">
+          First divergence:{" "}
+          {
+            graph.nodes.find((n) => n.id === graph.first_divergence_node_id)
+              ?.label
+          }
+        </p>
+      )}
       <ReactFlow
         nodes={nodes}
         edges={edges}

@@ -44,10 +44,15 @@ function TimelineEventRow({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between p-2 text-left hover:bg-zinc-700/50"
+        className="flex w-full items-center justify-between gap-2 p-2 text-left hover:bg-zinc-700/50"
       >
-        <span className="font-medium">{event.type}</span>
-        <span className="text-zinc-500">{ts}</span>
+        <span className="font-medium">{stepId}</span>
+        <span className="rounded bg-zinc-700/50 px-1.5 py-0.5 text-xs text-zinc-400">
+          {event.type}
+        </span>
+        <span className="flex-1 text-right text-xs text-zinc-500">
+          {new Date(ts).toLocaleTimeString()}
+        </span>
         <span className="text-zinc-500">{open ? "▼" : "▶"}</span>
       </button>
       {open && payload && (

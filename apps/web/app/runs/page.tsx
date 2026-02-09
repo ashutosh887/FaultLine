@@ -1,7 +1,17 @@
+"use client";
+
 import Link from "next/link";
-import { getRuns } from "@/app/lib/runs";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export const dynamic = "force-dynamic";
+
+function formatDuration(ms?: number): string {
+  if (!ms) return "—";
+  if (ms < 1000) return `${ms}ms`;
+  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+  return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
+}
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
@@ -22,17 +32,60 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export default async function RunsPage() {
-  const runs = await getRuns();
+export default function RunsPage() {
+  const router = useRouter();
+  const [runs, setRuns] = useState<
+    Array<{
+      id: string;
+      status: string;
+      duration_ms?: number;
+      failure_reason?: string;
+    }>
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/runs")
+      .then((r) => r.json())
+      .then((d) => {
+        setRuns(d.runs ?? []);
+        setLoading(false);
+      });
+  }, []);
+
+  function handleRefresh() {
+    setLoading(true);
+    router.refresh();
+    fetch("/api/runs")
+      .then((r) => r.json())
+      .then((d) => {
+        setRuns(d.runs ?? []);
+        setLoading(false);
+      });
+  }
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
-      <h1 className="text-2xl font-semibold text-zinc-100">Runs</h1>
-      <p className="mt-2 text-zinc-500">
-        {runs.length === 0
-          ? "No traces yet. Run npm run seed for demo data, or ingest events via POST /api/ingest."
-          : `${runs.length} trace${runs.length === 1 ? "" : "s"}`}
-      </p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-zinc-100">Runs</h1>
+          <p className="mt-2 text-zinc-500">
+            {loading
+              ? "Loading..."
+              : runs.length === 0
+                ? "No traces yet. Run npm run seed for demo data, or ingest events via POST /api/ingest."
+                : `${runs.length} trace${runs.length === 1 ? "" : "s"}`}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleRefresh}
+          disabled={loading}
+          className="rounded-md border border-zinc-600 bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 transition hover:bg-zinc-700 disabled:opacity-50"
+        >
+          {loading ? "..." : "↻ Refresh"}
+        </button>
+      </div>
       <div className="mt-8 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/50">
         <table className="w-full text-left text-sm">
           <thead>
@@ -61,9 +114,7 @@ export default async function RunsPage() {
                   <td className="p-3">
                     <StatusBadge status={run.status} />
                   </td>
-                  <td className="p-3">
-                    {run.duration_ms != null ? `${run.duration_ms}ms` : "—"}
-                  </td>
+                  <td className="p-3">{formatDuration(run.duration_ms)}</td>
                   <td className="p-3 max-w-xs truncate">
                     {run.failure_reason ?? "—"}
                   </td>
