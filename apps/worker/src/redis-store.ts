@@ -1,10 +1,16 @@
 import { Redis } from "ioredis";
 import type { TraceEvent, VerdictPack, CausalGraph } from "@faultline/shared";
 
+const isUpstash = process.env.REDIS_HOST?.includes("upstash.io");
 const redis = new Redis({
   host: process.env.REDIS_HOST ?? "localhost",
   port: parseInt(process.env.REDIS_PORT ?? "6379", 10),
   password: process.env.REDIS_PASSWORD,
+  tls: isUpstash
+    ? {
+        rejectUnauthorized: false,
+      }
+    : undefined,
   lazyConnect: true,
 });
 
