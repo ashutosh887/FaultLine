@@ -24,7 +24,6 @@ async function storeEvents(
   trace_id: string,
   events: TraceEvent[],
 ): Promise<void> {
-  await redis.connect();
   await redis.set(EVENTS_KEY(trace_id), JSON.stringify(events));
   await redis.sadd(TRACES_KEY, trace_id);
   await redis.sadd(PROJECT_TRACES_KEY("default"), trace_id);
